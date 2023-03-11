@@ -43,5 +43,47 @@ z
 "mundial" %>%
   paste("palmeiras não tem", .)
 
+# dplyr equivalente do pandas no python
 
+#select seleciona colunas
+#filter filtrar linhas
+#mutate adicionar ou alterar colunas
+#summarize serve para agregar colunas
+#group_by serve para aplicar as funções por grupo
+#count serve para gerar frequencias de colunas
+#arrange serve para ordenar a dataframe com base em uma ou mais colunas
+# existem funções de join - juntar dataframes
 
+# select
+cjpg <- cjpg |> 
+  select(-julgado) #apagando apenas o julgado
+
+glimpse(cjpg)
+
+cjpg <- cjpg |> 
+  select(-c(1, pagina, hora_coleta, cd_doc, grupo)) #c(1,3,4) tb funcionaria
+glimpse(cjpg)
+
+df1 <- cjpg |> 
+  select(processo,foro, magistrado)
+glimpse(df1)
+
+df2 <- cjpg |> 
+  select(processo,distribuidor = foro, magistrado)
+glimpse(df2)
+
+glimpse(cjpg)
+
+df3 <- cjpg |> 
+  select(classe:magistrado)
+glimpse(df3)
+
+df4 <- cjpg |> 
+  select(starts_with("c"))
+glimpse(df4)
+
+df5 <- cjpg |> 
+  select(ends_with("o"))
+glimpse(df5)
+
+?select
