@@ -68,3 +68,5 @@ arquivos <- paste0("data/cjpg", 1:20, ".rds")
 arquivos
 
 walk2(arquivos, grupos, ~saveRDS(.y,.x))
+
+#comentário adicionado após criar repositório
