@@ -82,3 +82,11 @@ cjpg <- cjpg |>
 
 santander <- cjpg |> 
   filter(str_detect(requerido,"(?i)santander"))
+
+santander <- santander |> 
+  select(-c(grupo, cd_doc, 1, pagina, hora_coleta))
+
+santander |> 
+  mutate(grupo = ntile(n = 2)) |> 
+  group_split(grupo) |> 
+  walk2(c("data/santander1.rds", "data/santander2.rds"), ~saveRDS(.x,.y))
