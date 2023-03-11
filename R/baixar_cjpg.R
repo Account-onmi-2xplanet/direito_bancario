@@ -70,3 +70,15 @@ arquivos
 walk2(arquivos, grupos, ~saveRDS(.y,.x))
 
 #comentário adicionado após criar repositório
+
+arquivos <- list.files("data", full.names = TRUE, pattern = "cjpg" )
+arquivos 
+cjpg <- map_dfr(arquivos, readRDS)
+cjpg <- cjpg |> 
+  mutate(requerido = str_extract(julgado, "(?i)(?<=requerid[ao]:).+?(?=:)"),.after = classe)
+
+cjpg <- cjpg |> 
+  mutate(requerente = str_extract(julgado, "(?i)(?<=requerente: ).+?(?=:)"),.after = classe)
+
+santander <- cjpg |> 
+  filter(str_detect(requerido,"(?i)santander"))
