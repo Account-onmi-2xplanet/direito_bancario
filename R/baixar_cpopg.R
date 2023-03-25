@@ -7,3 +7,39 @@ purrr::walk(processos,~{
   tjsp::tjsp_baixar_cpopg(.x,diretorio =  here::here("data-raw/cpopg")) #.x para interar cada grupo de 1000
   
 })
+library(tjsp)
+arquivos <- list.files("data-raw/cpopg", full.names = TRUE)
+dados <- tjsp_ler_dados_cpopg(arquivos)
+partes <- tjsp_ler_partes(arquivos)
+movimentacao <- tjsp_ler_movimentacao(arquivos)
+
+library(JurisMiner)
+movimentacao <- movimentacao |> 
+  tempo_movimentacao()
+
+library(tidyverse)
+tempo_processo <- movimentacao |> 
+  group_by(processo) |> 
+  summarize(tempo = max(decorrencia_acumulada))
+
+partes |> 
+  count(tipo_parte)
+
+partes <- partes |> 
+  filter(str_detect(tipo_parte,"^Req"))
+
+partes <- partes |> 
+  mutate(tipo_parte = case_when(
+    str_detect(tipo_parte, "d") ~ "reqd",
+    TRUE ~ "reqt"
+  ))
+
+p <- partes |>
+  select(processo, tipo_parte, parte) |> 
+  pivot_wider(names_from = "tipo_parte", values_from = "parte")
+
+santander <- partes |> 
+  filter(tipo_parte == "reqd", str_detect(parte,"(?i)santander"))
+
+dados <- dados |> 
+  semi_join(santander, by = "processo")
