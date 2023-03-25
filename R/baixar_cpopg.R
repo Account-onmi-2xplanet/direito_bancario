@@ -43,3 +43,36 @@ santander <- partes |>
 
 dados <- dados |> 
   semi_join(santander, by = "processo")
+
+arquivos <- list.files("data-raw/cpopg", full.names = TRUE)
+
+cpopg_dados <- tjsp_ler_dados_cpopg(arquivos = arquivos)
+
+cpopg_partes <- tjsp_ler_partes(arquivos = arquivos)
+
+cpopg_movimentacao <- tjsp_ler_movimentacao(arquivos = arquivos)
+
+cpopg_movimentacao <- cpopg_movimentacao |> 
+  separate(movimentacao, into = c("principal", "detalhamento"), sep = "\\s{3,}", extra = "merge")
+
+julgado <- cpopg_movimentacao |> 
+  filter(str_detect(principal, "(?i)^julgad[ao]"))
+
+incidentes <- tjsp_ler_tabela_incidentes(arquivos = arquivos[1:100])
+
+
+
+
+processos <- readRDS(here::here("data/processo_santander.rds"))
+objeto <- setdiff(processo,cpopg_dados$processo)
+
+
+
+objeto <- split(objeto, ceiling(seq_along(objeto)/1000))
+purrr::walk(objeto,~{
+  tjsp::tjsp_autenticar()
+  tjsp::tjsp_baixar_cpopg(.x,diretorio =  here::here("data-raw/cpopg")) #.x para interar cada grupo de 1000
+  
+}) # rodar mais tarde
+
+
