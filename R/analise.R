@@ -78,4 +78,25 @@ glimpse(julgado)
 julgado <- julgado |> 
   select(processo, dt_decisao = data, decisao)
 
+basefinal <- cjpg |> 
+  inner_join(cpopg_dados, join_by(processo)) |> 
+  inner_join(julgado, join_by(processo))
 
+basefinal <- basefinal |> 
+  distinct()
+
+basefinal <- basefinal |> 
+  mutate(duracao = lapso(dt_distribuicao, dt_decisao))
+
+basefinal <- basefinal |> 
+  ungroup()
+
+basefinal |> 
+  count(decisao, sort = TRUE) |> 
+  View()
+
+basefinal <- basefinal |> 
+  mutate(decisao = case_when(
+    decisao == "parcial" ~ "procedente",
+    TRUE ~ decisao
+  ))
