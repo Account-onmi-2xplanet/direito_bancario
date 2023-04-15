@@ -48,7 +48,10 @@ cjpg <- cjpg |>
 
 julgado <- julgado |> 
   mutate(decisao = tjsp_classificar_sentenca(principal))
+julgado2 <- julgado
+julgado <- julgado2
 
+rm(julgado2)
 cjpg <- cjpg |> 
   select(processo,classe = classe2, assunto)
 glimpse(cjpg)
@@ -100,3 +103,96 @@ basefinal <- basefinal |>
     decisao == "parcial" ~ "procedente",
     TRUE ~ decisao
   ))
+
+basefinal <- basefinal |> 
+  mutate(across(c(classe,assunto,decisao), .fns = as.factor))
+
+basefinal |> 
+  count(assunto)
+
+cjpg |> 
+  count(assunto)
+
+#regressão logistica
+modelo <- glm(decisao ~ classe+assunto+log(valor_da_acao)+duracao, data = basefinal, family = binomial("logit") )
+summary(modelo)
+preditos <- predict(modelo, basefinal, type = "response")
+preditos
+
+basefinal$prob <- preditos
+
+basefinal <- basefinal |> 
+  mutate(predito = ifelse(prob >0.7, "procedente", "improcedente"))
+
+basefinal |> 
+  count(decisao,predito)
+
+basefinal |> 
+  count(classe,decisao)
+
+install.packages("caret")
+library(caret)
+basefinal <- basefinal |> 
+  drop_na()
+
+basefinal <- basefinal |> 
+  mutate(predito = as.factor(predito))
+
+cm <- confusionMatrix(basefinal$predito,basefinal$decisao, mode = "everything")
+cm
+
+modelo2 <- rpart::rpart(decisao ~ classe+assunto+log(valor_da_acao)+duracao, data = basefinal)
+summary(modelo2)
+plot(modelo2)
+
+library(tree)
+install.packages("tree")
+library("tree")
+
+modelo3 <- tree(decisao ~ classe+assunto+valor_da_acao+duracao, data = basefinal)
+summary(modelo3)
+plot(modelo3)
+
+preditos <- predict(modelo3, basefinal)
+
+count(basefinal,decisao) |> 
+  mutate(p = n/sum(n))
+
+basefinal |> 
+  count(classe,decisao) |> 
+  group_by(classe) |> 
+  mutate(p = n/sum(n))
+
+modelo4 <- tree(decisao ~ classe+assunto+duracao, data = basefinal)
+summary(modelo4)
+plot(modelo4)
+
+
+basefinal |> 
+  ggplot(aes(x = classe, fill = classe)) + 
+  geom_bar() + 
+  labs(x = 'classe processual', 
+       y = 'quantidade', 
+       title = 'Classe processual em direito bancário', 
+       caption = 'Fonte: TJSP') + 
+  theme_bw()
+
+frequencia <- basefinal |> 
+  count(classe, decisao)
+frequencia
+
+frequencia |> 
+  ggplot(aes(x = n, y = classe, fill = decisao))+
+  geom_bar(stat = 'identity')+
+  scale_fill_brewer(palette = "Set1")
+
+
+frequencia2 <- basefinal |> 
+  count(classe, assunto, decisao)
+frequencia2
+
+frequencia2 |> 
+  ggplot(aes(x = n, y = assunto, fill = decisao))+
+  geom_bar(stat = 'identity')+
+  scale_fill_brewer(palette = "Set1")+
+  facet_wrap(~classe)
